@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/Home"
+            android:icon="@drawable/if_home_126572"
+            android:title="Home" />
+        <item
+            android:id="@+id/Profile"
+            android:icon="@drawable/profile_icon"
+            android:title="Profile" />
+        <item
+            android:id="@+id/search_song"
+            android:icon="@drawable/if_search_107183"
+            android:title="Search Songs" />
+        <item
+            android:id="@+id/playlist"
+            android:icon="@drawable/playlist_icon"
+            android:title="Playlists" />
+    </group>
+</menu>
