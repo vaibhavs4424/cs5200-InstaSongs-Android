@@ -1,5 +1,6 @@
 package instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
@@ -13,18 +14,34 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.Singleton.PlaylistSingleton;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.entities.Playlist;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.entities.RegisteredUser;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.entities.Song;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.HomeFragment;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.PlaylistDialogFragment;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.PlaylistFragment;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.SearchSongFragment;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.SonginPlayListFragment;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.utilities.Constants;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.utilities.VolleySingleton;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.vo.SongListValueObject;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.vo.songs.Example;
@@ -42,7 +59,6 @@ public class LandingActivity extends AppCompatActivity {
     private String SONG_LIST_URL = "http://ws.audioscrobbler.com/2.0/?method=chart.gettoptracks&api_key=1733cb589acd22eb69aab1c25efe0c2e&format=json";
     private Example searchQuery;
     private instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.vo.artists.Example artistSearchQuery;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,6 +88,10 @@ public class LandingActivity extends AppCompatActivity {
                                 return true;
                             case R.id.search_song:
                                 currFragment = new SearchSongFragment();
+                                switchFragments(currFragment);
+                                return true;
+                            case R.id.playlist:
+                                currFragment = new PlaylistFragment();
                                 switchFragments(currFragment);
                                 return true;
                         }
@@ -209,4 +229,195 @@ public class LandingActivity extends AppCompatActivity {
 
         mRequestQueue.add(mStringRequest);
     }
+
+    public void fetchPlaylists()
+    {
+        String URL  = "http://Cs5200Summer2018Instasongs.us-east-2.elasticbeanstalk.com/api/registereduser/"+Constants.DEV_USER_ID+"/playlists";
+        //RequestQueue initialized
+        mRequestQueue = VolleySingleton.getInstance().getRequestQueue();
+
+        //String Request initialized
+        mStringRequest = new StringRequest(Request.Method.GET, URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+
+                try {
+                    List<Playlist> mPlaylistList = mapper.readValue(response.toString(), new TypeReference<List<Playlist>>(){});
+
+                    ((PlaylistFragment) currFragment).inflatePlaylist(mPlaylistList);
+                    PlaylistSingleton.getInstance().setmPlaylists(mPlaylistList);
+
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+                // Toast.makeText(getApplicationContext(),"Response :" + response.toString(), Toast.LENGTH_LONG).show();//display the response on screen
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                Log.i(TAG,"Error :" + error.toString());
+            }
+        });
+
+        mRequestQueue.add(mStringRequest);
+    }
+
+    public void createPlaylist(String PlaylistName) throws Exception
+    {
+        Playlist playlist = new Playlist();
+        playlist.setName(PlaylistName);
+        RegisteredUser user = new RegisteredUser();
+        user.setId(Constants.DEV_USER_ID);
+        playlist.setOwner(user);
+        final String mPlaylistString = mapper.writeValueAsString(playlist);
+
+        String URL  = "http://Cs5200Summer2018Instasongs.us-east-2.elasticbeanstalk.com/api/playlist";
+        //RequestQueue initialized
+        mRequestQueue = VolleySingleton.getInstance().getRequestQueue();
+
+        //String Request initialized
+        mStringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+
+                try {
+                    Playlist mPlaylistList = mapper.readValue(response.toString(), Playlist.class);
+                    fetchPlaylists();
+
+
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+                // Toast.makeText(getApplicationContext(),"Response :" + response.toString(), Toast.LENGTH_LONG).show();//display the response on screen
+
+            }
+
+
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                Log.i(TAG,"Error :" + error.toString());
+            }
+        }) {
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+            @Override
+            public byte[] getBody() throws AuthFailureError
+            {
+                try {
+                    return mPlaylistString.getBytes("utf-8");
+                }
+                catch (UnsupportedEncodingException e)
+                {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+        };
+        mRequestQueue.add(mStringRequest);
+    }
+
+    public void createSong(Song song) throws Exception
+    {
+
+        final String mSongString = mapper.writeValueAsString(song);
+
+        String URL  = "http://Cs5200Summer2018Instasongs.us-east-2.elasticbeanstalk.com/api/song";
+        //RequestQueue initialized
+        mRequestQueue = VolleySingleton.getInstance().getRequestQueue();
+
+        //String Request initialized
+        mStringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+
+                try {
+                    Song song = mapper.readValue(response.toString(), Song.class);
+                    addSongToPlayList(song.getId());
+
+
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+                // Toast.makeText(getApplicationContext(),"Response :" + response.toString(), Toast.LENGTH_LONG).show();//display the response on screen
+
+            }
+
+
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                Log.i(TAG,"Error :" + error.toString());
+            }
+        }) {
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+            @Override
+            public byte[] getBody() throws AuthFailureError
+            {
+                try {
+                    return mSongString.getBytes("utf-8");
+                }
+                catch (UnsupportedEncodingException e)
+                {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+        };
+        mRequestQueue.add(mStringRequest);
+    }
+
+
+    public void addSongToPlayList(int songId)
+    {
+        int playListId = PlaylistSingleton.getInstance().getmPlaylists().get(PlaylistSingleton.getInstance().getmSelecetedPlayList()).getId();
+
+        String URL  = "http://Cs5200Summer2018Instasongs.us-east-2.elasticbeanstalk.com/api/playlist/"+playListId+"/song/"+songId;
+        //RequestQueue initialized
+        mRequestQueue = VolleySingleton.getInstance().getRequestQueue();
+
+        //String Request initialized
+        mStringRequest = new StringRequest(Request.Method.PUT, URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+
+
+                    Toast.makeText(getApplicationContext(),"Song successfully added to playlist",Toast.LENGTH_SHORT).show();
+
+                // Toast.makeText(getApplicationContext(),"Response :" + response.toString(), Toast.LENGTH_LONG).show();//display the response on screen
+
+            }
+
+
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                Log.i(TAG,"Error :" + error.toString());
+            }
+        });
+        mRequestQueue.add(mStringRequest);
+    }
+
+
+ public void navigateToPlayListSongs(Playlist playlist)
+ {
+     currFragment = new SonginPlayListFragment();
+     switchFragments(currFragment);
+ }
 }

@@ -17,5 +17,6 @@
             android:id="@+id/playlist"
             android:icon="@drawable/playlist_icon"
             android:title="Playlists" />
+
     </group>
 </menu>

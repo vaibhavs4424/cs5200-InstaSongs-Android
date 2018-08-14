@@ -75,7 +75,7 @@ public class SearchSongFragment extends Fragment {
     }
 
     public void inflateSongListView(Example query){
-        mSongListAdapter = new SearchSongAdapter(query.getResults().getTrackmatches().getTrack());
+        mSongListAdapter = new SearchSongAdapter(query.getResults().getTrackmatches().getTrack(),getActivity());
         mSongListView.setAdapter(mSongListAdapter);
 
     }

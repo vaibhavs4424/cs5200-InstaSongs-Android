@@ -17,13 +17,14 @@ import com.android.volley.toolbox.NetworkImageView;
 import java.util.List;
 
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.R;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.entities.Song;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.PlaylistDialogFragment;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.utilities.VolleySingleton;
-import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.vo.songs.Track;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.vo.Track;
 
-public class SearchSongAdapter extends RecyclerView.Adapter<SearchSongAdapter.ViewHolder> {
+public class SongInPlaylistAdapter extends RecyclerView.Adapter<SongInPlaylistAdapter.ViewHolder> {
 
-    private List<Track> values;
+    private List<Song> values;
     private ImageLoader mImageLoader;
     private Context context;
 
@@ -32,9 +33,9 @@ public class SearchSongAdapter extends RecyclerView.Adapter<SearchSongAdapter.Vi
         public TextView txtSongName;
         public TextView txtArtistName;
         private NetworkImageView songThumbnail;
+        public View layout;
         public ImageButton mAddToPlayList;
 
-        public View layout;
 
         public ViewHolder(View v) {
             super(v);
@@ -46,7 +47,7 @@ public class SearchSongAdapter extends RecyclerView.Adapter<SearchSongAdapter.Vi
         }
     }
 
-    public void add(int position, Track item) {
+    public void add(int position, Song item) {
         values.add(position, item);
         notifyItemInserted(position);
     }
@@ -57,14 +58,14 @@ public class SearchSongAdapter extends RecyclerView.Adapter<SearchSongAdapter.Vi
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public SearchSongAdapter(List<Track> myDataset,Context context) {
-        this.context = context;
+    public SongInPlaylistAdapter(List<Song> myDataset, Context context) {
         values = myDataset;
+        this.context = context;
     }
 
     @NonNull
     @Override
-    public SearchSongAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public SongInPlaylistAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         // create a new view
         LayoutInflater inflater = LayoutInflater.from(
                 parent.getContext());
@@ -76,22 +77,13 @@ public class SearchSongAdapter extends RecyclerView.Adapter<SearchSongAdapter.Vi
     }
 
     @Override
-    public void onBindViewHolder(@NonNull SearchSongAdapter.ViewHolder holder, int position) {
-        final Track track = values.get(position);
+    public void onBindViewHolder(@NonNull SongInPlaylistAdapter.ViewHolder holder, final int position) {
+        final Song track = values.get(position);
         holder.txtSongName.setText(track.getName());
-        holder.txtArtistName.setText(track.getArtist());
+        holder.txtArtistName.setText(track.getArtists().get(0).getName());
         mImageLoader = VolleySingleton.getInstance().getImageLoader();
-        holder.songThumbnail.setImageUrl(track.getImage().get(3).getText(),mImageLoader);
-        holder.mAddToPlayList.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                FragmentActivity activity = (FragmentActivity)(context);
-                FragmentManager fm = activity.getSupportFragmentManager();
-                PlaylistDialogFragment alertDialog = new PlaylistDialogFragment();
-                alertDialog.show(fm,"Playlist Dialog");
-
-            }
-        });
+        holder.songThumbnail.setImageUrl(track.getImageUrl(),mImageLoader);
+        holder.mAddToPlayList.setVisibility(View.INVISIBLE);
     }
 
     @Override
