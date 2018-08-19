@@ -18,6 +18,7 @@ import java.util.List;
 
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.R;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.PlaylistDialogFragment;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.SearchSongPlaylistDialogFragment;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.utilities.VolleySingleton;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.vo.songs.Track;
 
@@ -87,7 +88,8 @@ public class SearchSongAdapter extends RecyclerView.Adapter<SearchSongAdapter.Vi
             public void onClick(View view) {
                 FragmentActivity activity = (FragmentActivity)(context);
                 FragmentManager fm = activity.getSupportFragmentManager();
-                PlaylistDialogFragment alertDialog = new PlaylistDialogFragment();
+                SearchSongPlaylistDialogFragment alertDialog = new SearchSongPlaylistDialogFragment();
+                alertDialog.setmTrack(track);
                 alertDialog.show(fm,"Playlist Dialog");
 
             }

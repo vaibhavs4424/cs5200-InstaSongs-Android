@@ -12,8 +12,10 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -33,9 +35,12 @@ import java.util.List;
 import java.util.Map;
 
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.Singleton.PlaylistSingleton;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.Singleton.UserSingleton;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.entities.Playlist;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.entities.RegisteredUser;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.entities.Song;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.FollowFragment;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.FollowersFragment;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.HomeFragment;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.PlaylistDialogFragment;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.PlaylistFragment;
@@ -43,11 +48,13 @@ import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.SonginPlayListFragment;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.utilities.Constants;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.utilities.VolleySingleton;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.vo.Artist;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.vo.SongListValueObject;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.vo.songs.Example;
 
 public class LandingActivity extends AppCompatActivity {
-
+    private NavigationView mNavigationView;
+    private TextView mDrawerHeader;
     private Fragment currFragment;
     private static final String TAG = LandingActivity.class.getName();
     private Button btnRequest;
@@ -64,10 +71,14 @@ public class LandingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_landing2);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-
-
+        mNavigationView = (NavigationView) findViewById(R.id.nav_view);
+        Toast.makeText(this, UserSingleton.getInstance().getType(),Toast.LENGTH_SHORT).show();
         mDrawerLayout = findViewById(R.id.drawer_layout);
-        NavigationView navigationView = findViewById(R.id.nav_view);
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        mDrawerHeader = (TextView) navigationView.getHeaderView(0).findViewById(R.id.drawer_header);
+        mDrawerHeader.setText(UserSingleton.getInstance().getUser().getFirstName() + " "+ UserSingleton.getInstance().getUser().getLastName());
+        manipulateDrawer();
+        //mDrawerHeader = (TextView) navigationView.getHeaderView().findViewById(R.id.drawer_header);
         navigationView.setNavigationItemSelectedListener(
                 new NavigationView.OnNavigationItemSelectedListener() {
                     @Override
@@ -92,6 +103,14 @@ public class LandingActivity extends AppCompatActivity {
                                 return true;
                             case R.id.playlist:
                                 currFragment = new PlaylistFragment();
+                                switchFragments(currFragment);
+                                return true;
+                            case R.id.followers:
+                                currFragment = new FollowersFragment();
+                                switchFragments(currFragment);
+                                return true;
+                            case R.id.following:
+                                currFragment = new FollowFragment();
                                 switchFragments(currFragment);
                                 return true;
                         }
@@ -230,9 +249,71 @@ public class LandingActivity extends AppCompatActivity {
         mRequestQueue.add(mStringRequest);
     }
 
+
+    public void fetchArtists()
+    {
+        String URL  = "http://Cs5200Summer2018Instasongs.us-east-2.elasticbeanstalk.com/api/artist";
+        //RequestQueue initialized
+        mRequestQueue = VolleySingleton.getInstance().getRequestQueue();
+
+        //String Request initialized
+        mStringRequest = new StringRequest(Request.Method.GET, URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+
+                try {
+                   List<instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.entities.Artist> artists = mapper.readValue(response.toString(), new TypeReference<List<instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.entities.Artist>>(){});
+
+                    ((FollowFragment) currFragment).inflateAllArtists(artists);
+
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+                // Toast.makeText(getApplicationContext(),"Response :" + response.toString(), Toast.LENGTH_LONG).show();//display the response on screen
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                Log.i(TAG,"Error :" + error.toString());
+            }
+        });
+
+        mRequestQueue.add(mStringRequest);
+    }
+
+
+    public void followArtist(int artistId)
+    {
+        String URL  = "http://Cs5200Summer2018Instasongs.us-east-2.elasticbeanstalk.com/api/registereduser/follow/"+UserSingleton.getInstance().getUser().getId()+"/"+artistId;
+        //RequestQueue initialized
+        mRequestQueue = VolleySingleton.getInstance().getRequestQueue();
+
+        //String Request initialized
+        mStringRequest = new StringRequest(Request.Method.PUT, URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+
+                // Toast.makeText(getApplicationContext(),"Response :" + response.toString(), Toast.LENGTH_LONG).show();//display the response on screen
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                Log.i(TAG,"Error :" + error.toString());
+            }
+        });
+
+        mRequestQueue.add(mStringRequest);
+    }
+
     public void fetchPlaylists()
     {
-        String URL  = "http://Cs5200Summer2018Instasongs.us-east-2.elasticbeanstalk.com/api/registereduser/"+Constants.DEV_USER_ID+"/playlists";
+        String URL  = "http://Cs5200Summer2018Instasongs.us-east-2.elasticbeanstalk.com/api/registereduser/"+UserSingleton.getInstance().getUser().getId()+"/playlists";
         //RequestQueue initialized
         mRequestQueue = VolleySingleton.getInstance().getRequestQueue();
 
@@ -271,7 +352,7 @@ public class LandingActivity extends AppCompatActivity {
         Playlist playlist = new Playlist();
         playlist.setName(PlaylistName);
         RegisteredUser user = new RegisteredUser();
-        user.setId(Constants.DEV_USER_ID);
+        user.setId(UserSingleton.getInstance().getUser().getId());
         playlist.setOwner(user);
         final String mPlaylistString = mapper.writeValueAsString(playlist);
 
@@ -419,5 +500,19 @@ public class LandingActivity extends AppCompatActivity {
  {
      currFragment = new SonginPlayListFragment();
      switchFragments(currFragment);
+ }
+
+
+
+ public void manipulateDrawer(){
+        if(UserSingleton.getInstance().getUser().getType().equals("Artist")){
+          Menu nav_Menu = mNavigationView.getMenu();
+            nav_Menu.findItem(R.id.followers).setVisible(true);
+        }
+
+     if(UserSingleton.getInstance().getUser().getType().equals("User")){
+         Menu nav_Menu = mNavigationView.getMenu();
+         nav_Menu.findItem(R.id.following).setVisible(true);
+     }
  }
 }

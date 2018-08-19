@@ -6,10 +6,6 @@
             android:icon="@drawable/if_home_126572"
             android:title="Home" />
         <item
-            android:id="@+id/Profile"
-            android:icon="@drawable/profile_icon"
-            android:title="Profile" />
-        <item
             android:id="@+id/search_song"
             android:icon="@drawable/if_search_107183"
             android:title="Search Songs" />
@@ -17,6 +13,16 @@
             android:id="@+id/playlist"
             android:icon="@drawable/playlist_icon"
             android:title="Playlists" />
+        <item
+            android:visible="false"
+            android:id="@+id/followers"
+            android:icon="@drawable/profile_icon"
+            android:title="Followers" />
+        <item
+            android:visible="false"
+            android:id="@+id/following"
+            android:icon="@drawable/profile_icon"
+            android:title="Following" />
 
     </group>
 </menu>

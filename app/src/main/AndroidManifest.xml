@@ -23,6 +23,10 @@
             android:name=".LandingActivity"
             android:label="@string/title_activity_landing"
             android:theme="@style/AppTheme.NoActionBar"></activity>
+        <activity
+            android:name=".RegistrationActivity"
+            android:label="@string/title_activity_registration"
+            android:theme="@style/AppTheme.NoActionBar"></activity>
     </application>
 
 </manifest>
