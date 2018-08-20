@@ -36,15 +36,19 @@ import java.util.Map;
 
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.Singleton.PlaylistSingleton;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.Singleton.UserSingleton;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.adapters.ReviewListaAdapter;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.entities.Playlist;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.entities.RegisteredUser;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.entities.Review;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.entities.Song;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.AddReviewFragment;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.FollowFragment;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.FollowersFragment;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.HomeFragment;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.PlaylistDialogFragment;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.PlaylistFragment;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.SearchSongFragment;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.SeeReviewsFragment;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.SonginPlayListFragment;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.utilities.Constants;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.utilities.VolleySingleton;
@@ -113,6 +117,14 @@ public class LandingActivity extends AppCompatActivity {
                                 currFragment = new FollowFragment();
                                 switchFragments(currFragment);
                                 return true;
+                            case R.id.add_reviews:
+                                currFragment = new AddReviewFragment();
+                                switchFragments(currFragment);
+                                return true;
+                            case R.id.see_reviews:
+                                currFragment = new SeeReviewsFragment();
+                                switchFragments(currFragment);
+                                return true;
                         }
                     return true;
                     }
@@ -143,6 +155,39 @@ public class LandingActivity extends AppCompatActivity {
                 return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void sendLatestTrackRequestForReview(){
+
+        //RequestQueue initialized
+        mRequestQueue = VolleySingleton.getInstance().getRequestQueue();
+
+        //String Request initialized
+        mStringRequest = new StringRequest(Request.Method.GET, SONG_LIST_URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+
+                try {
+                    songList = mapper.readValue(response.toString(), SongListValueObject.class);
+                    ((AddReviewFragment) currFragment).inflateSongListView(songList);
+
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+                // Toast.makeText(getApplicationContext(),"Response :" + response.toString(), Toast.LENGTH_LONG).show();//display the response on screen
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                Log.i(TAG,"Error :" + error.toString());
+            }
+        });
+
+        mRequestQueue.add(mStringRequest);
     }
 
 
@@ -250,6 +295,148 @@ public class LandingActivity extends AppCompatActivity {
     }
 
 
+    public void findSongForReview(final ReviewListaAdapter.ViewHolder holder,final int position,int reviewId)
+    {
+        String URL  = "http://Cs5200Summer2018Instasongs.us-east-2.elasticbeanstalk.com/api/review/"+reviewId+"/song";
+        //RequestQueue initialized
+        mRequestQueue = VolleySingleton.getInstance().getRequestQueue();
+
+        //String Request initialized
+        mStringRequest = new StringRequest(Request.Method.GET, URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+
+                try {
+                  Song song = mapper.readValue(response.toString(), Song.class);
+
+                    ((SeeReviewsFragment) currFragment).setSongDetails(holder,position,song);
+
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+                // Toast.makeText(getApplicationContext(),"Response :" + response.toString(), Toast.LENGTH_LONG).show();//display the response on screen
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                Log.i(TAG,"Error :" + error.toString());
+            }
+        });
+
+        mRequestQueue.add(mStringRequest);
+    }
+
+
+    public void getAllReviews()
+    {
+        String URL  = "http://Cs5200Summer2018Instasongs.us-east-2.elasticbeanstalk.com/api/review";
+        //RequestQueue initialized
+        mRequestQueue = VolleySingleton.getInstance().getRequestQueue();
+
+        //String Request initialized
+        mStringRequest = new StringRequest(Request.Method.GET, URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+
+                try {
+                    List<Review> reviews = mapper.readValue(response.toString(), new TypeReference<List<Review>>(){});
+
+                    ((SeeReviewsFragment) currFragment).inflateReviews(reviews);
+
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+                // Toast.makeText(getApplicationContext(),"Response :" + response.toString(), Toast.LENGTH_LONG).show();//display the response on screen
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                Log.i(TAG,"Error :" + error.toString());
+            }
+        });
+
+        mRequestQueue.add(mStringRequest);
+    }
+
+    public void fetchFollowingArtists(int userId)
+    {
+        String URL  = "http://Cs5200Summer2018Instasongs.us-east-2.elasticbeanstalk.com/api/registereduser/"+userId+"/following";
+        //RequestQueue initialized
+        mRequestQueue = VolleySingleton.getInstance().getRequestQueue();
+
+        //String Request initialized
+        mStringRequest = new StringRequest(Request.Method.GET, URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+
+                try {
+                    List<instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.entities.Artist> artists = mapper.readValue(response.toString(), new TypeReference<List<instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.entities.Artist>>(){});
+
+                    ((FollowFragment) currFragment).inflateFollowingArtists(artists);
+
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+                // Toast.makeText(getApplicationContext(),"Response :" + response.toString(), Toast.LENGTH_LONG).show();//display the response on screen
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                Log.i(TAG,"Error :" + error.toString());
+            }
+        });
+
+        mRequestQueue.add(mStringRequest);
+    }
+
+
+    public void fetchArtistFollowers(int userId)
+    {
+        String URL  = "http://Cs5200Summer2018Instasongs.us-east-2.elasticbeanstalk.com/api/artist/registereduser/follower/"+userId;
+        //RequestQueue initialized
+        mRequestQueue = VolleySingleton.getInstance().getRequestQueue();
+
+        //String Request initialized
+        mStringRequest = new StringRequest(Request.Method.GET, URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+
+                try {
+                    List<RegisteredUser> artists = mapper.readValue(response.toString(), new TypeReference<List<RegisteredUser>>(){});
+
+                    ((FollowersFragment) currFragment).inflateFollowerRegsiteredUsers(artists);
+
+                }
+                catch (IOException e)
+                {
+                    e.printStackTrace();
+                }
+                // Toast.makeText(getApplicationContext(),"Response :" + response.toString(), Toast.LENGTH_LONG).show();//display the response on screen
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                Log.i(TAG,"Error :" + error.toString());
+            }
+        });
+
+        mRequestQueue.add(mStringRequest);
+    }
+
     public void fetchArtists()
     {
         String URL  = "http://Cs5200Summer2018Instasongs.us-east-2.elasticbeanstalk.com/api/artist";
@@ -298,7 +485,7 @@ public class LandingActivity extends AppCompatActivity {
             public void onResponse(String response) {
 
                 // Toast.makeText(getApplicationContext(),"Response :" + response.toString(), Toast.LENGTH_LONG).show();//display the response on screen
-
+                fetchFollowingArtists(UserSingleton.getInstance().getRegisteredUser().getId());
             }
         }, new Response.ErrorListener() {
             @Override
@@ -463,6 +650,110 @@ public class LandingActivity extends AppCompatActivity {
         mRequestQueue.add(mStringRequest);
     }
 
+    public void addReviewForSong(Song song, String reviewText)throws Exception
+    {
+
+        Review review = new Review();
+        review.setContent(reviewText);
+
+        final String mSongString = mapper.writeValueAsString(review);
+
+        String URL  = "http://Cs5200Summer2018Instasongs.us-east-2.elasticbeanstalk.com/api/review/critic/"+UserSingleton.getInstance().getCritic().getId()+"/song/"+song.getId();
+        //RequestQueue initialized
+        mRequestQueue = VolleySingleton.getInstance().getRequestQueue();
+
+        //String Request initialized
+        mStringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+
+                // Toast.makeText(getApplicationContext(),"Response :" + response.toString(), Toast.LENGTH_LONG).show();//display the response on screen
+
+            }
+
+
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                Log.i(TAG,"Error :" + error.toString());
+            }
+        }) {
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+            @Override
+            public byte[] getBody() throws AuthFailureError
+            {
+                try {
+                    return mSongString.getBytes("utf-8");
+                }
+                catch (UnsupportedEncodingException e)
+                {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+        };
+        mRequestQueue.add(mStringRequest);
+    }
+
+    public void createSongForReview(Song song, final String reviewText) throws Exception
+    {
+
+        final String mSongString = mapper.writeValueAsString(song);
+
+        String URL  = "http://Cs5200Summer2018Instasongs.us-east-2.elasticbeanstalk.com/api/song";
+        //RequestQueue initialized
+        mRequestQueue = VolleySingleton.getInstance().getRequestQueue();
+
+        //String Request initialized
+        mStringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+
+                try {
+                    Song song = mapper.readValue(response.toString(), Song.class);
+                    addReviewForSong(song,reviewText);
+
+
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+                // Toast.makeText(getApplicationContext(),"Response :" + response.toString(), Toast.LENGTH_LONG).show();//display the response on screen
+
+            }
+
+
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+                Log.i(TAG,"Error :" + error.toString());
+            }
+        }) {
+            @Override
+            public String getBodyContentType() {
+                return "application/json; charset=utf-8";
+            }
+            @Override
+            public byte[] getBody() throws AuthFailureError
+            {
+                try {
+                    return mSongString.getBytes("utf-8");
+                }
+                catch (UnsupportedEncodingException e)
+                {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+        };
+        mRequestQueue.add(mStringRequest);
+    }
 
     public void addSongToPlayList(int songId)
     {
@@ -513,6 +804,11 @@ public class LandingActivity extends AppCompatActivity {
      if(UserSingleton.getInstance().getUser().getType().equals("User")){
          Menu nav_Menu = mNavigationView.getMenu();
          nav_Menu.findItem(R.id.following).setVisible(true);
+     }
+
+     if(UserSingleton.getInstance().getUser().getType().equals("Critic")){
+         Menu nav_Menu = mNavigationView.getMenu();
+         nav_Menu.findItem(R.id.add_reviews).setVisible(true);
      }
  }
 }

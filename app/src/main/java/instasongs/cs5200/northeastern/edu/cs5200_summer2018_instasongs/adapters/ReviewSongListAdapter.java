@@ -1,7 +1,6 @@
 package instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.adapters;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -11,26 +10,24 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
-import com.mikhaellopez.circularimageview.CircularImageView;
 
 import java.util.List;
 
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.R;
-import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.SplashScreen;
+import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.AddReviewDialogFragment;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.fragments.PlaylistDialogFragment;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.utilities.VolleySingleton;
-import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.vo.SongListValueObject;
 import instasongs.cs5200.northeastern.edu.cs5200_summer2018_instasongs.vo.Track;
 
-public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHolder> {
+public class ReviewSongListAdapter extends RecyclerView.Adapter<ReviewSongListAdapter.ViewHolder> {
 
     private List<Track> values;
     private ImageLoader mImageLoader;
     private Context context;
+
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
@@ -62,14 +59,14 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public SongListAdapter(List<Track> myDataset, Context context) {
+    public ReviewSongListAdapter(List<Track> myDataset, Context context) {
         values = myDataset;
         this.context = context;
     }
 
     @NonNull
     @Override
-    public SongListAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ReviewSongListAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         // create a new view
         LayoutInflater inflater = LayoutInflater.from(
                 parent.getContext());
@@ -81,24 +78,21 @@ public class SongListAdapter extends RecyclerView.Adapter<SongListAdapter.ViewHo
     }
 
     @Override
-    public void onBindViewHolder(@NonNull SongListAdapter.ViewHolder holder, final int position) {
+    public void onBindViewHolder(@NonNull ReviewSongListAdapter.ViewHolder holder, final int position) {
         final Track track = values.get(position);
         holder.txtSongName.setText(track.getName());
         holder.txtArtistName.setText(track.getArtist().getName());
         mImageLoader = VolleySingleton.getInstance().getImageLoader();
         holder.songThumbnail.setImageUrl(track.getImage().get(3).getText(),mImageLoader);
-        if(context instanceof SplashScreen)
-        {
-            holder.mAddToPlayList.setVisibility(View.GONE);
-        }
+        holder.mAddToPlayList.setImageResource(R.drawable.add_review);
         holder.mAddToPlayList.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 FragmentActivity activity = (FragmentActivity)(context);
                 FragmentManager fm = activity.getSupportFragmentManager();
-                PlaylistDialogFragment alertDialog = new PlaylistDialogFragment();
+                AddReviewDialogFragment alertDialog = new AddReviewDialogFragment();
                 alertDialog.setmTrack(track);
-                alertDialog.show(fm,"Playlist Dialog");
+                alertDialog.show(fm,"Review Dialog");
 
             }
         });

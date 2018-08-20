@@ -47,12 +47,12 @@ public class FollowersFragment extends Fragment{
         // use a linear layout manager
         layoutManager = new LinearLayoutManager(getActivity());
         mFollowerListView.setLayoutManager(layoutManager);
-        inflatePlaylist(UserSingleton.getInstance().getArtist().getFollowers());
+        ((LandingActivity) getActivity()).fetchArtistFollowers(UserSingleton.getInstance().getArtist().getId());
         return view;
     }
 
 
-    public void inflatePlaylist(List<RegisteredUser> playlists)
+    public void inflateFollowerRegsiteredUsers(List<RegisteredUser> playlists)
     {
         mPlaylists = playlists;
         mPlaylistAdapter = new FollowerListAdapter(playlists);

@@ -54,6 +54,7 @@ public class FollowFragment extends Fragment{
         inflateFollowingArtists(UserSingleton.getInstance().getRegisteredUser().getFollowing());
 
         ((LandingActivity) getActivity()).fetchArtists();
+        ((LandingActivity) getActivity()).fetchFollowingArtists(UserSingleton.getInstance().getRegisteredUser().getId());
 
         return view;
     }

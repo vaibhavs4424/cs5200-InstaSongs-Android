@@ -23,6 +23,15 @@
             android:id="@+id/following"
             android:icon="@drawable/profile_icon"
             android:title="Following" />
+        <item
+            android:visible="false"
+            android:id="@+id/add_reviews"
+            android:icon="@drawable/review_icon"
+            android:title="Add Reviews" />
+        <item
+            android:id="@+id/see_reviews"
+            android:icon="@drawable/review_icon"
+            android:title="See Reviews" />
 
     </group>
 </menu>
