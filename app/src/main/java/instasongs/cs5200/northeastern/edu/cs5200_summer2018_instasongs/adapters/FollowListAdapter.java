@@ -71,7 +71,7 @@ public class FollowListAdapter extends RecyclerView.Adapter<FollowListAdapter.Vi
     @Override
     public void onBindViewHolder(@NonNull FollowListAdapter.ViewHolder holder, final int position) {
         final Artist track = values.get(position);
-        holder.txtArtistName.setText(track.getFirstName()+track.getLastName());
+        holder.txtArtistName.setText(track.getName());
         holder.btnFollowArtist.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
